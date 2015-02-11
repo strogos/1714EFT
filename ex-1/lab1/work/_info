@@ -1,0 +1,90 @@
+m255
+K4
+z2
+13
+!s112 1.1
+!i10d 8192
+!i10e 25
+!i10f 100
+cModel Technology
+Z0 d/home/courses/desdigsys2/2015s/dd215s09/ex-1/lab1
+T_opt
+!s110 1422286465
+VQ_j:XJ1_amn6a<Rh]^CK`1
+04 8 4 work test_dut fast 0
+=1-0015173b1504-54c65e80-cea80-3f70
+o-quiet -auto_acc_if_foreign -work work
+n@_opt
+OE;O;10.3c_2;59
+vdut
+Z1 DXx6 sv_std 3 std 0 22 <EOTafDcUY:cQeO^ICn]m3
+Z2 !s110 1422286463
+!i10b 1
+!s100 =44PMU5?;dk=jVGSKMeSV1
+I;WL_E[jU?i<EcIGdQX:lz3
+Z3 V`JN@9S9cnhjKRR_L]QIcM3
+!s105 dut_v_unit
+S1
+R0
+w1422218237
+8dut.v
+Fdut.v
+L0 5
+Z4 OE;L;10.3c_2;59
+r1
+!s85 0
+31
+Z5 !s108 1422286462.549290
+Z6 !s107 test_dut.sv|dut_property.sv|dut.v|
+Z7 !s90 -sv|dut.v|dut_property.sv|test_dut.sv|+define+implication|
+!i113 0
+o-sv
+Z8 !s92 -sv +define+implication
+vdut_property
+R1
+R2
+!i10b 1
+!s100 56VF]iAAV9PFKmX:P0Eoc3
+ICA:ohZ:UK2ANI7QN3ogeA2
+R3
+!s105 dut_property_sv_unit
+S1
+R0
+w1422280346
+8dut_property.sv
+Fdut_property.sv
+L0 1
+R4
+r1
+!s85 0
+31
+R5
+R6
+R7
+!i113 0
+o-sv
+R8
+vtest_dut
+R1
+R2
+!i10b 1
+!s100 7X_7=G>]Dn4zLH<A5;QPY3
+IA^Mfk@]E_7Md`eM3amD2>0
+R3
+!s105 test_dut_sv_unit
+S1
+R0
+w1422219523
+8test_dut.sv
+Ftest_dut.sv
+L0 1
+R4
+r1
+!s85 0
+31
+R5
+R6
+R7
+!i113 0
+o-sv
+R8

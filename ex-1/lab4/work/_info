@@ -1,0 +1,90 @@
+m255
+K4
+z2
+13
+!s112 1.1
+!i10d 8192
+!i10e 25
+!i10f 100
+cModel Technology
+Z0 d/home/courses/desdigsys2/2015s/dd215s09/ex-1/lab4
+T_opt
+!s110 1423239054
+V>=@cC?7cdAj_L8:4cZSG32
+04 12 4 work test_counter fast 0
+=1-0015173b1504-54d4e78d-7f36e-26b0
+o-quiet -auto_acc_if_foreign -work work
+n@_opt
+OE;O;10.3c_2;59
+vcounter
+Z1 DXx6 sv_std 3 std 0 22 <EOTafDcUY:cQeO^ICn]m3
+Z2 !s110 1423239052
+!i10b 1
+!s100 K]B`JM9Pd3l>FO>YTkgZ40
+IDfki;@AM6RE;e4z`[CXgB3
+Z3 V`JN@9S9cnhjKRR_L]QIcM3
+!s105 counter_v_unit
+S1
+R0
+w1422293899
+8counter.v
+Fcounter.v
+L0 1
+Z4 OE;L;10.3c_2;59
+r1
+!s85 0
+31
+Z5 !s108 1423239051.911051
+Z6 !s107 test_counter.sv|counter_property.sv|counter.v|
+Z7 !s90 -sv|counter.v|counter_property.sv|test_counter.sv|+define+check3|
+!i113 0
+Z8 o-sv -L mtiAvm -L mtiOvm -L mtiUvm -L mtiUPF -L infact
+Z9 !s92 -sv +define+check3 -L mtiAvm -L mtiOvm -L mtiUvm -L mtiUPF -L infact
+vcounter_property
+R1
+R2
+!i10b 1
+!s100 P6e:4XkV>h;HCIQk[L@SK0
+IT@X:a9JO72JfNcUTQjaBU0
+R3
+!s105 counter_property_sv_unit
+S1
+R0
+w1423239049
+8counter_property.sv
+Fcounter_property.sv
+L0 12
+R4
+r1
+!s85 0
+31
+R5
+R6
+R7
+!i113 0
+R8
+R9
+vtest_counter
+R1
+R2
+!i10b 1
+!s100 5`9c>zjllOTV=RK:Q[oCc0
+IVNZKn926hfZ1UEO>;>nPV2
+R3
+!s105 test_counter_sv_unit
+S1
+R0
+w1422293900
+8test_counter.sv
+Ftest_counter.sv
+L0 1
+R4
+r1
+!s85 0
+31
+R5
+R6
+R7
+!i113 0
+R8
+R9
