@@ -1,0 +1,266 @@
+
+// @lang=tda @ts=2
+
+module proc_property_suite(reset,clk, IR, REG_FILE,CONTROL_STATE,
+dataIn, writeEnable, dataOut,dataAddr,instrAddr,instrIn);
+
+input logic reset;
+input logic clk;
+input logic [15:0] IR;
+input logic [7:0][7:0] REG_FILE;
+input logic [2:0] CONTROL_STATE;
+input logic [7:0] dataIn;
+input logic writeEnable;
+input logic [7:0] dataOut;
+input logic [7:0] dataAddr;
+input logic [15:0] instrAddr;
+input logic [15:0] instrIn;
+
+parameter c_IF  = 3'b001;
+parameter c_ID  = 3'b010;
+parameter c_EX  = 3'b011;
+parameter c_MEM = 3'b100;
+parameter c_WB  = 3'b101;
+
+parameter c_ALU_REG = 4'b0001;
+
+parameter c_ADD_IMM = 4'b0010;
+parameter c_OR_IMM  = 4'b0011;
+
+parameter c_LOAD    = 4'b0100;
+parameter c_STORE   = 4'b0101;
+
+parameter c_JUMP    = 4'b0110;
+parameter c_BRANCH  = 4'b0111;
+
+parameter c_ADD     = 3'b001;
+parameter c_OR      = 3'b010;
+
+// sequence definition for SVA property
+
+`define true 1
+
+`include "tidal.sv"
+
+`begin_tda(ops)
+
+// Sequence definition for TiDAL property
+
+// Verify the instructions OR_IMM, OR_REG, ADD_IMM und ADD_REG
+property or_imm;
+    logic [2:0] rs;
+    logic [2:0] rd;
+    logic [5:0] imm;
+    logic [7:0] content_rs;
+
+    t ##0 set_freeze(rs, IR[11:9]) and
+    t ##0 set_freeze(rd, IR[8:6]) and
+    t ##0 set_freeze(imm, IR[5:0]) and
+    t ##0 set_freeze(content_rs, (rs == 0 ? 2'h00 : REG_FILE[rs])) and
+    t ##0 CONTROL_STATE == c_ID and
+    t ##0 IR[15:12] == c_OR_IMM and
+    t ##0 rd != (3'b000)
+
+		implies
+
+    t ##4 REG_FILE[rd] == content_rs | imm[5]== 1'b1 ? {2'b11, imm} : {2'b00, imm};
+endproperty
+
+property or_reg;
+    logic [2:0] rs;
+		logic [2:0] rt;
+    logic [2:0] rd;
+    logic [2:0] alu_op;
+    logic [7:0] content_rs;
+		logic [7:0] content_rt;
+
+    t ##0 set_freeze(rs, IR[11:9]) and
+		t ##0 set_freeze(rt, IR[8:6]) and
+    t ##0 set_freeze(rd, IR[5:3]) and
+    t ##0 set_freeze(alu_op, IR[2:0]) and
+    t ##0 set_freeze(content_rs, (rs == 0 ? 2'h00 : REG_FILE[rs])) and
+		t ##0 set_freeze(content_rt, (rt == 0 ? 2'h00 : REG_FILE[rt])) and
+    t ##0 CONTROL_STATE == c_ID and
+    t ##0 IR[15:12] == c_ALU_REG and
+		t ##0 IR[2:0] == c_OR and
+    t ##0 rd != (3'b000)
+
+		implies
+
+    t ##4 REG_FILE[rd] == content_rs | content_rt;
+endproperty
+
+property add_imm;
+    logic [2:0] rs;
+    logic [2:0] rd;
+    logic [5:0] imm;
+    logic [7:0] content_rs;
+
+    t ##0 set_freeze(rs, IR[11:9]) and
+    t ##0 set_freeze(rd, IR[8:6]) and
+    t ##0 set_freeze(imm, IR[5:0]) and
+    t ##0 set_freeze(content_rs, (rs == 0 ? 2'h00 : REG_FILE[rs])) and
+    t ##0 CONTROL_STATE == c_ID and
+    t ##0 IR[15:12] == c_ADD_IMM and
+    t ##0 rd != (3'b000)
+
+		implies
+
+    t ##4 REG_FILE[rd] == content_rs + imm[5]== 1'b1 ? {2'b11, imm} : {2'b00, imm};
+endproperty
+
+property add_reg;
+    logic [2:0] rs;
+		logic [2:0] rt;
+    logic [2:0] rd;
+    logic [2:0] alu_op;
+    logic [7:0] content_rs;
+		logic [7:0] content_rt;
+
+    t ##0 set_freeze(rs, IR[11:9]) and
+		t ##0 set_freeze(rt, IR[8:6]) and
+    t ##0 set_freeze(rd, IR[5:3]) and
+    t ##0 set_freeze(alu_op, IR[2:0]) and
+    t ##0 set_freeze(content_rs, (rs == 0 ? 2'h00 : REG_FILE[rs])) and
+		t ##0 set_freeze(content_rt, (rt == 0 ? 2'h00 : REG_FILE[rt])) and
+    t ##0 CONTROL_STATE == c_ID and
+    t ##0 IR[15:12] == c_ALU_REG and
+		t ##0 IR[2:0] == c_ADD and
+    t ##0 rd != (3'b000)
+
+		implies
+
+    t ##4 REG_FILE[rd] == content_rs + content_rt;
+endproperty
+
+// For LOAD, show that the memory contents end up in the destination register
+property load_value;
+    logic [2:0] rs;
+    logic [2:0] rd;
+    logic [5:0] imm;
+    logic [7:0] content_rs;
+		logic [7:0] content_mem;
+
+    t ##0 set_freeze(rs, IR[11:9]) and
+    t ##0 set_freeze(rd, IR[8:6]) and
+    t ##0 set_freeze(imm, IR[5:0]) and
+    t ##0 set_freeze(content_rs, (rs == 0 ? 2'h00 : REG_FILE[rs])) and
+		t ##2 set_freeze(content_mem, dataIn[7:0]) and
+    t ##0 CONTROL_STATE == c_ID and
+    t ##0 IR[15:12] == c_LOAD and
+    t ##0 rd != (3'b000)
+
+		implies
+
+    t ##4 REG_FILE[rd] == content_mem;
+endproperty
+
+// For STORE, show that data is sent to memory correctly and that signal writeEnable is set
+property store_value;
+    logic [2:0] rs;
+		logic [2:0] rt;
+    logic [5:0] imm;
+    logic [7:0] content_rs;
+		logic [7:0] content_rt;
+
+    t ##0 set_freeze(rs, IR[11:9]) and
+		t ##0 set_freeze(rt, IR[8:6]) and
+    t ##0 set_freeze(imm, IR[5:0]) and
+    t ##0 set_freeze(content_rs, (rs == 0 ? 2'h00 : REG_FILE[rs])) and
+		t ##0 set_freeze(content_rt, (rt == 0 ? 2'h00 : REG_FILE[rt])) and
+    t ##0 CONTROL_STATE == c_ID and
+    t ##0 IR[15:12] == c_STORE
+
+		implies
+
+    t ##2 writeEnable == 1'b1 and
+		t ##2 dataOut == content_rt;
+endproperty
+
+// prove for both LOAD and STORE that the correct address is sent to the corresponding output
+property load_store_address;
+    logic [2:0] rs;
+    logic [5:0] imm;
+    logic [7:0] content_rs;
+
+    t ##0 set_freeze(rs, IR[11:9]) and
+    t ##0 set_freeze(imm, IR[5:0]) and
+    t ##0 set_freeze(content_rs, (rs == 0 ? 2'h00 : REG_FILE[rs])) and
+    t ##0 CONTROL_STATE == c_ID and
+    t ##0 (IR[15:12] == c_LOAD or IR[15:12] == c_STORE)
+
+		implies
+
+    t ##2 dataAddr == content_rs + imm[5]== 1'b1 ? {2'b11, imm} : {2'b00, imm};
+endproperty
+
+// Write properties that prove that the instruction address pointer (signal instrAddr), is
+// only modified in two cases
+property instrAddr_change;
+		
+    
+		//t ##0 set_freeze(current_instAddr, instrAddr) and
+		t ##1 instrAddr != $past(instrAddr)
+
+		implies
+
+    t ##0 (IR[15:12] == c_JUMP or IR[15:12] == c_BRANCH) or
+		t ##1 instrAddr == $past(instrAddr) + 16'd2;
+endproperty
+
+// For the JUMP instruction, show that after execution, the next instruction is fetched from
+//the destination address of the branch
+property jump;
+    logic [11:0] offset;
+
+    t ##0 set_freeze(offset, IR[11:0]) and
+    t ##0 CONTROL_STATE == c_ID and
+    t ##0 IR[15:12] == c_JUMP
+
+		implies
+
+    t ##2 CONTROL_STATE == c_ID and
+		t ##2 instrAddr == $past(instrAddr,2) + 16'd2 + offset[11]== 1'b1 ? {4'b1111, offset} : {4'b0000, offset};
+endproperty
+
+// For the BRANCH instruction, show that after execution the next instruction is fetched
+// either from the destination of the branch or from the address immediately following the
+// current BRANCH instruction, depending on the branching condition
+property branch;
+    logic [2:0] rs;
+		logic [7:0] content_rs;
+		logic [8:0] offset;
+
+		t ##0 set_freeze(rs, IR[11:9]) and
+		t ##0 set_freeze(content_rs, (rs == 0 ? 2'h00 : REG_FILE[rs])) and
+    t ##0 set_freeze(offset, IR[8:0]) and
+    t ##0 CONTROL_STATE == c_ID and
+    t ##0 IR[15:12] == c_BRANCH
+
+		implies
+		
+		t ##2 CONTROL_STATE == c_ID and
+		t ##2 instrAddr == (content_rs == 2'h00 ? ($past(instrAddr,2) + 16'd2 + (offset[8]== 1'b1 ? {7'b1111111, offset} : {7'b0000000, offset})) : $past(instrAddr,2) + 16'd2);
+endproperty
+
+// your operational properties
+
+// assert your properties
+a_or_imm: assert property(@(posedge clk) disable iff(reset) or_imm);
+a_or_reg: assert property(@(posedge clk) disable iff(reset) or_reg);
+a_add_imm: assert property(@(posedge clk) disable iff(reset) add_imm);
+a_add_reg: assert property(@(posedge clk) disable iff(reset) add_reg);
+a_load_value: assert property(@(posedge clk) disable iff(reset) load_value);
+a_store_value: assert property(@(posedge clk) disable iff(reset) store_value);
+a_load_store_address: assert property(@(posedge clk) disable iff(reset) load_store_address);
+a_instrAddr_change: assert property(@(posedge clk) disable iff(reset) instrAddr_change);
+a_jump: assert property(@(posedge clk) disable iff(reset) jump);
+a_branch: assert property(@(posedge clk) disable iff(reset) branch);
+
+`end_tda
+
+endmodule
+
+// your bind statement
+bind proc proc_property_suite inst_proc_property_suite(.*);
+

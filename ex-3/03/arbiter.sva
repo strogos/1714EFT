@@ -1,0 +1,61 @@
+// @lang=sva @ts=8
+
+module arbiter_property_suite(clk,reset,request_i,grant_o,free_i,state_s);
+
+input logic clk;
+input logic reset;
+input logic [1:0] request_i;
+input logic [1:0] grant_o;
+input logic free_i;
+input logic state_s;
+
+parameter IDLE = 1'b0;
+parameter BUSY = 1'b1;
+
+// sequence definition
+
+// property definition
+
+// reset
+property behavior1;
+	reset |-> state_s == IDLE ##0 grant_o == 2'b00;
+endproperty
+
+// after reset assume that free_i = 1
+property assumption;
+	$fell(reset) |-> free_i == 1'b1;
+endproperty
+
+// first competing request after reset is granted to master 0
+property behavior2;
+	$fell(reset) ##0 request_i == 2'b11 |=> grant_o == 2'b01 ##0 state_s == BUSY;
+endproperty
+
+// if there is no request there will be no grant
+property behavior3;
+	request_i == 2'b00 ##0 state_s == IDLE |=> grant_o == 2'b00 ##0 state_s == IDLE;
+endproperty
+
+// task 3.4
+property behavior4;
+	request_i == (2'b01 || 2'b10) ##0 free_i == 1'b1 ##0 state_s == IDLE |=> 
+		($past(request_i) == 2'b01 ? grant_o == 2'b01 : grant_o == 2'b10) ##1 state_s == IDLE;
+endproperty
+
+// task 3.5
+property behavior5;
+	request_i == 2'b11 ##0 free_i == 1'b1 ##0 $past(state_s == BUSY) |=> grant_o == $past(~grant_o,2);
+endproperty
+
+// assert, assume statement
+a_behavior1: assert property (@(posedge clk) behavior1);
+a_assumption: assume property (@(posedge clk) assumption);
+a_behavior2: assert property (@(posedge clk) disable iff(reset) behavior2);
+a_behavior3: assert property (@(posedge clk) disable iff(reset) behavior3);
+a_behavior4: assert property (@(posedge clk) disable iff(reset) behavior4);
+a_behavior5: assert property (@(posedge clk) disable iff(reset) behavior5);
+
+endmodule
+
+// bind statement
+bind arbiter arbiter_property_suite inst_arbiter_property_suite(.*);

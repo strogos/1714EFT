@@ -1,0 +1,48 @@
+module atm_property_suite (clk, error_i, multiple_i, correct_o, dismiss_o);
+
+input logic clk;
+input logic error_i;
+input logic multiple_i;
+input logic correct_o;
+input logic dismiss_o;
+
+/*property definitions*/
+
+// A cell is never corrected and dismissed at the same time
+property behavior1;
+	!(correct_o && dismiss_o);
+endproperty
+
+//An error-free cell is neither corrected nor dismissed
+property behavior2;
+	!error_i |-> !correct_o ##0 !dismiss_o;
+endproperty
+
+// All cells with multiple-bit errors are dismissed
+property behavior3;
+	error_i ##0 multiple_i |-> dismiss_o;
+endproperty
+
+// A first erroneous cell coming in is corrected if the error is a single-bit error and not a
+// multiple-bit error
+property behavior4;
+	error_i ##0 $past(!error_i) ##0 !multiple_i |-> correct_o;
+endproperty
+
+// A second erroneous cell is always dismissed
+property behavior5;
+	error_i ##0 $past(error_i) |-> dismiss_o;
+endproperty
+
+// make assertion on properties to be checked
+
+a_behavior1: assert property (@(posedge clk) behavior1);
+a_behavior2: assert property (@(posedge clk) behavior2);
+a_behavior3: assert property (@(posedge clk) behavior3);
+a_behavior4: assert property (@(posedge clk) behavior4);
+a_behavior5: assert property (@(posedge clk) behavior5);
+
+endmodule
+
+// bind the verification IP to the design
+bind atm atm_property_suite inst_atm_property_suite(.*);
