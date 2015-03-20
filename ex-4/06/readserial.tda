@@ -1,0 +1,127 @@
+
+// @lang=tda @ts=2
+
+module readserial_property_suite(clk, reset_n, rxd, data, valid, 
+state_s, data_i, cnt_s, cnt_en);
+
+input logic clk;
+input logic reset_n;
+input logic rxd;
+input logic [7:0] data;
+input logic valid;
+
+input integer state_s;
+input logic [7:0] data_i;
+input integer cnt_s;
+input logic cnt_en;
+
+parameter IDLE = 1'd0;
+parameter READDATA = 1'd1;
+
+// sequence definition for SVA property
+
+
+`define true 1
+
+`include "tidal.sv"
+
+`begin_tda(ops)
+
+// Sequence definition for TiDAL property
+sequence reset_sequence; reset_n == 1'b0; endsequence
+sequence in_idle_counter_is_0; !(state_s == IDLE) || (cnt_s == 3'b0); endsequence
+sequence in_idle_counter_not_enabled; !(state_s == IDLE) || (cnt_en == 1'b0); endsequence
+
+property reset;
+		reset_sequence |=>
+    t ##0 state_s == IDLE and 
+		t ##0 !valid and
+		t ##0 cnt_en == 1'b0 and
+		t ##0 cnt_s == 3'd0;
+	
+endproperty
+
+property stay_in_idle;
+		t ##0 rxd and
+		t ##0 state_s == IDLE
+
+		implies
+		
+		t ##1 !valid and
+		t ##1 cnt_en == 1'b0 and
+		t ##1 cnt_s == 3'd0 and
+    t ##1 state_s == IDLE;
+endproperty
+
+property read_byte;
+		t ##0 state_s == IDLE and
+		t ##0 !rxd and
+		t ##0 cnt_en == 1'b0 and
+		t ##0 cnt_s == 3'd0
+
+	implies
+
+		t ##1!valid[*8] and
+		t ##1 state_s == READDATA and
+		t ##9 state_s == IDLE and
+		t ##9 valid and
+		t ##9 cnt_en == 1'b0 and
+		t ##9 cnt_s == 3'd0 and
+		t ##9 data == {$past(rxd,8), $past(rxd,7), $past(rxd,6), $past(rxd,5), $past(rxd,4), $past(rxd,3), $past(rxd,2), $past(rxd,1)};
+
+endproperty
+
+// inductive proof for reachability constraints in read_byte
+property in_idle_counter_not_enabled__step; 
+		t ##0 in_idle_counter_not_enabled
+		
+		implies
+
+    t ##1 in_idle_counter_not_enabled;
+endproperty
+
+property in_idle_counter_not_enabled__base; 
+		t ##0 reset_sequence
+		
+		implies
+
+    t ##0 in_idle_counter_not_enabled;
+endproperty
+
+property in_idle_counter_is_0__step; 
+		t ##0 in_idle_counter_is_0 and
+		t ##1 in_idle_counter_is_0
+		
+		implies
+
+    t ##2 in_idle_counter_is_0;
+endproperty
+
+property in_idle_counter_is_0__base; 
+		t ##0 reset_sequence
+
+		implies
+
+    t ##0 in_idle_counter_is_0 and
+		t ##1 in_idle_counter_is_0;
+endproperty
+
+// your operational properties
+
+// assert your properties
+a_reset: assert property(@(posedge clk) reset);
+a_stay_in_idle: assert property(@(posedge clk) disable iff(!reset_n) stay_in_idle);
+a_read_byte: assert property(@(posedge clk) disable iff(!reset_n) read_byte);
+a_in_idle_counter_not_enabled__step: assert property(@(posedge clk) disable iff(!reset_n) in_idle_counter_not_enabled__step);
+a_in_idle_counter_not_enabled__base: assert property(@(posedge clk) in_idle_counter_not_enabled__base);
+a_in_idle_counter_is_0__step: assert property(@(posedge clk) disable iff(!reset_n) in_idle_counter_is_0__step);
+a_in_idle_counter_is_0__base: assert property(@(posedge clk) in_idle_counter_is_0__base);
+
+
+`end_tda
+
+endmodule
+
+// your bind statement
+bind readserial readserial_property_suite inst_readserial_property_suite(.*);
+

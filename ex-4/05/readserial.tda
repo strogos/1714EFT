@@ -1,0 +1,78 @@
+
+// @lang=tda @ts=2
+
+module readserial_property_suite(clk, reset_n, rxd, data, valid, 
+state_s, data_i, cnt_s, cnt_en);
+
+input logic clk;
+input logic reset_n;
+input logic rxd;
+input logic [7:0] data;
+input logic valid;
+
+input integer state_s;
+input logic [7:0] data_i;
+input integer cnt_s;
+input logic cnt_en;
+
+parameter IDLE = 1'd0;
+parameter READDATA = 1'd1;
+
+// sequence definition for SVA property
+
+
+`define true 1
+
+`include "tidal.sv"
+
+`begin_tda(ops)
+
+// Sequence definition for TiDAL property
+sequence reset_sequence;
+		reset_n == 1'b0;
+endsequence
+
+property reset;
+		t ##0 reset_sequence
+
+		implies
+
+    t ##0 state_s == IDLE and 
+		t ##0 cnt_s == 3'b0;
+endproperty
+
+property stay_in_idle;
+		t ##0 rxd and
+		t ##0 state_s == IDLE
+
+		implies
+
+    t ##1 state_s == IDLE;
+endproperty
+
+property read_byte;
+		t ##0 state_s == IDLE and
+		t ##0 !rxd
+
+		implies
+
+    t ##1 state_s == READDATA and
+		t ##9 state_s == IDLE;
+endproperty
+
+
+// your operational properties
+
+// assert your properties
+a_reset: assert property(@(posedge clk) reset);
+a_stay_in_idle: assert property(@(posedge clk) disable iff(!reset_n) stay_in_idle);
+a_read_byte: assert property(@(posedge clk) disable iff(!reset_n) read_byte);
+
+
+`end_tda
+
+endmodule
+
+// your bind statement
+bind readserial readserial_property_suite inst_readserial_property_suite(.*);
+
